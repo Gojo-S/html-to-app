@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>بارگذاری و ذخیره HTML</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .container {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    padding: 30px;
+    max-width: 850px;
+    width: 100%;
+  }
+  h1 { color: #333; font-size: 22px; margin-bottom: 20px; text-align: center; }
+  button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  button:hover { transform: translateY(-2px); }
+  .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+  .btn-success { background: #28a745; color: #fff; }
+  .btn-danger { background: #dc3545; color: #fff; }
+  .btn-ghost { background: #e9ecef; color: #333; }
+  .buttons-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+  .buttons-row button { flex: 1; min-width: 130px; }
+  textarea {
+    width: 100%;
+    min-height: 300px;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    direction: ltr;
+    text-align: left;
+    resize: vertical;
+    outline: none;
+    transition: border 0.2s;
+    margin-bottom: 15px;
+  }
+  textarea:focus { border-color: #667eea; }
+  .status {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 14px;
+    display: none;
+  }
+  .status.success { background: #d4edda; color: #155724; display: block; }
+  .status.error { background: #f8d7da; color: #721c24; display: block; }
+  .status.info { background: #d1ecf1; color: #0c5460; display: block; }
+  .hint {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #777;
+    text-align: center;
+    line-height: 1.8;
+  }
+
+  /* ---------- مودال (طراحی Bottom Sheet مخصوص موبایل) ---------- */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    /* ارتفاع کیبورد به صورت داینامیک از JS خونده میشه */
+    bottom: var(--kb-height, 0px); 
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(3px);
+    display: none;
+    align-items: flex-end; /* چسبیدن به پایین */
+    justify-content: center;
+    z-index: 1000;
+    transition: bottom 0.15s ease-out;
+  }
+  .modal-overlay.open { display: flex; }
+  
+  .modal {
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    padding: 24px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .modal h2 { font-size: 18px; color: #333; margin-bottom: 16px; text-align: center; }
+  .modal label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; font-weight: 600; }
+  .modal input[type="text"] {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 16px; /* 16px تا در iOS زوم نکند */
+    font-family: 'Courier New', monospace;
+    direction: ltr;
+    text-align: left;
+    outline: none;
+    transition: border 0.2s;
+    margin-bottom: 16px;
+  }
+  .modal input[type="text"]:focus { border-color: #667eea; }
+  .modal-buttons { display: flex; gap: 10px; }
+  .modal-buttons button { flex: 1; }
+
+  /* در دسکتاپ مودال وسط صفحه باز بشه */
+  @media (min-width: 600px) {
+    .modal-overlay {
+      align-items: center;
+      bottom: 0 !important; /* غیرفعال کردن تنظیم کیبورد در دسکتاپ */
+    }
+    .modal {
+      border-radius: 20px;
+      padding-bottom: 24px;
+      animation: fadeIn 0.2s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📋 بارگذاری و ذخیره HTML</h1>
+
+  <div class="buttons-row">
+    <button id="pasteBtn" class="btn-primary">📥 بارگذاری از کلیپ‌بورد</button>
+    <button id="clearBtn" class="btn-danger">🗑️ پاک کردن</button>
+  </div>
+
+  <textarea id="output" placeholder="محتوای کپی‌شده اینجا نمایش داده می‌شود...&#10;&#10;اگر دکمه بارگذاری کار نکرد، داخل این کادر کلیک کنید و Ctrl+V بزنید."></textarea>
+
+  <div class="buttons-row">
+    <button id="saveAsBtn" class="btn-success" style="flex: 1;">💾 ذخیره با نام جدید...</button>
+  </div>
+
+  <div id="status" class="status"></div>
+  <div class="hint">
+    💡 با زدن دکمه ذخیره، پنجره‌ای از پایین باز می‌شود که نام فایل را وارد می‌کنید و ذخیره می‌شود.
+  </div>
+</div>
+
+<!-- مودال نام فایل -->
+<div class="modal-overlay" id="nameModal">
+  <div class="modal">
+    <h2>💾 نام فایل را وارد کنید</h2>
+    <label for="nameInput">نام فایل (با یا بدون .html)</label>
+    <input type="text" id="nameInput" value="output.html" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="modal-buttons">
+      <button class="btn-ghost" id="cancelNameBtn">لغو</button>
+      <button class="btn-success" id="confirmNameBtn">ذخیره</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const output = document.getElementById('output');
+const status = document.getElementById('status');
+const nameModal = document.getElementById('nameModal');
+const nameInput = document.getElementById('nameInput');
+
+let pendingContent = '';
+
+// ----------------------------------------------------
+// تشخیص هوشمند ارتفاع کیبورد (حل مشکل رفتن زیر کیبورد)
+// ----------------------------------------------------
+function updateKeyboardHeight() {
+  if (window.visualViewport && window.innerWidth < 600) {
+    // اختلاف ارتفاع پنجره اصلی و ارتفاع قابل مشاهده = ارتفاع کیبورد
+    const kbHeight = window.innerHeight - window.visualViewport.height;
+    // اعمال ارتفاع کیبورد به پایین مودال
+    document.documentElement.style.setProperty('--kb-height', `${Math.max(0, kbHeight)}px`);
+  }
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', updateKeyboardHeight);
+  window.visualViewport.addEventListener('scroll', updateKeyboardHeight);
+}
+window.addEventListener('resize', updateKeyboardHeight);
+updateKeyboardHeight();
+
+// ----------------------------------------------------
+
+function showStatus(msg, type) {
+  status.textContent = msg;
+  status.className = 'status ' + type;
+  clearTimeout(showStatus._t);
+  showStatus._t = setTimeout(() => { status.className = 'status'; }, 5000);
+}
+
+document.getElementById('pasteBtn').addEventListener('click', async () => {
+  if (!navigator.clipboard || !navigator.clipboard.readText) {
+    output.focus(); output.select();
+    showStatus('⚠️ مرورگر اجازه خواندن کلیپ‌بورد را نداد. داخل کادر Ctrl+V بزنید.', 'error');
+    return;
+  }
+  try {
+    const text = await navigator.clipboard.readText();
+    if (!text) { showStatus('⚠️ کلیپ‌بورد خالی است.', 'error'); return; }
+    output.value = text;
+    showStatus('✅ محتوا با موفقیت بارگذاری شد.', 'success');
+  } catch (err) {
+    output.focus();
+    showStatus('⚠️ دسترسی به کلیپ‌بورد ممکن نشد. داخل کادر Ctrl+V بزنید.', 'error');
+  }
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  output.value = '';
+  output.focus();
+  showStatus('🗑️ پاک شد.', 'info');
+});
+
+function openNameModal() {
+  nameModal.classList.add('open');
+  // بعد از باز شدن مودال، فوکوس می‌کنیم
+  setTimeout(() => {
+    nameInput.focus();
+    nameInput.select();
+  }, 100);
+}
+
+function closeNameModal() {
+  nameModal.classList.remove('open');
+}
+
+document.getElementById('saveAsBtn').addEventListener('click', async () => {
+  const content = output.value;
+  if (!content.trim()) {
+    showStatus('⚠️ محتوایی برای ذخیره وجود ندارد.', 'error');
+    return;
+  }
+
+  // در مرورگرهای دسکتاپی (کروم/اج) پنجره سیستم باز میشه
+  if (window.showSaveFilePicker && window.innerWidth >= 600) {
+    try {
+      const fileHandle = await window.showSaveFilePicker({
+        suggestedName: 'output.html',
+        types: [{ description: 'HTML File', accept: { 'text/html': ['.html', '.htm'] } }]
+      });
+      const writable = await fileHandle.createWritable();
+      await writable.write(content);
+      await writable.close();
+      showStatus('✅ ذخیره شد: ' + fileHandle.name, 'success');
+      return;
+    } catch (e) {
+      if (e.name === 'AbortError') return;
+      console.warn(e);
+    }
+  }
+
+  // در موبایل و WebViewها مودال اختصاصی خودمون باز میشه
+  pendingContent = content;
+  openNameModal();
+});
+
+document.getElementById('confirmNameBtn').addEventListener('click', () => {
+  let filename = nameInput.value.trim() || 'output.html';
+  if (!/\.[a-z0-9]+$/i.test(filename)) filename += '.html';
+  nameInput.value = filename;
+
+  closeNameModal();
+  doDownload(pendingContent, filename);
+});
+
+document.getElementById('cancelNameBtn').addEventListener('click', closeNameModal);
+
+nameModal.addEventListener('click', (e) => {
+  if (e.target === nameModal) closeNameModal();
+});
+
+nameInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('confirmNameBtn').click();
+  }
+});
+
+function doDownload(content, filename) {
+  const blob = new Blob([content], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showStatus('✅ دانلود شد: ' + filename, 'success');
+}
+</script>
+</body>
+</html>
